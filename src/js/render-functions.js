@@ -74,7 +74,10 @@ export const hideGallery = () => {
   galleryList.style.display = 'none';
 };
 
-export const imagePromisesLoading = async numberOfNewImages => {
+export const imagePromisesLoading = async (
+  numberOfNewImages,
+  shouldScroll = false,
+) => {
   const allListItems = document.querySelectorAll('.gallery-item');
   const newItems = Array.from(allListItems).slice(-numberOfNewImages);
 
@@ -103,6 +106,17 @@ export const imagePromisesLoading = async numberOfNewImages => {
     hideLoader();
     showGallery();
     showLoadMoreButton();
+
+    // todo scroll
+    if (shouldScroll) {
+      const firstNewItem = newItems[0];
+      const scroll = firstNewItem.getBoundingClientRect();
+
+      window.scrollBy({
+        top: scroll.height * 2,
+        behavior: 'smooth',
+      });
+    }
   });
 };
 

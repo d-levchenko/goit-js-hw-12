@@ -40,6 +40,7 @@ searchForm.addEventListener('submit', event => {
   clearGallery();
   showLoader();
   hideGallery();
+  hideLoadMoreButton();
 
   getImagesByQuery(userSearchText, page)
     .then(data => {
@@ -59,7 +60,7 @@ searchForm.addEventListener('submit', event => {
       } else {
         createGallery(data.hits);
         lightbox.refresh();
-        imagePromisesLoading();
+        imagePromisesLoading(data.totalHits, false);
       }
     })
     .catch(() => {
@@ -107,6 +108,6 @@ loadMoreButton.addEventListener('click', () => {
 
     createGallery(data.hits);
     lightbox.refresh();
-    return imagePromisesLoading(data.totalHits);
+    return imagePromisesLoading(data.totalHits, true);
   });
 });
