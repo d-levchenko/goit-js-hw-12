@@ -107,7 +107,6 @@ export const imagePromisesLoading = async (
     showGallery();
     showLoadMoreButton();
 
-    // todo scroll
     if (shouldScroll) {
       const firstNewItem = newItems[0];
       const scroll = firstNewItem.getBoundingClientRect();
