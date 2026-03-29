@@ -9,13 +9,21 @@ import {
   hideLoader,
   imagePromisesLoading,
   lightbox,
+  hideLoadMoreButton,
+  hideGallery,
+  showGallery,
 } from './js/render-functions';
 
 const searchForm = document.querySelector('.form');
+const loadMoreButton = document.querySelector('.load-more-btn');
+
+let userSearchText = '';
+let page = 1;
+const itemsPerPage = 15;
 
 searchForm.addEventListener('submit', event => {
   event.preventDefault();
-  const userSearchText = searchForm.elements['search-text'].value.trim();
+  userSearchText = searchForm.elements['search-text'].value.trim();
 
   if (userSearchText === '') {
     iziToast.show({
@@ -31,11 +39,13 @@ searchForm.addEventListener('submit', event => {
 
   clearGallery();
   showLoader();
+  hideGallery();
 
-  getImagesByQuery(userSearchText)
+  getImagesByQuery(userSearchText, page)
     .then(data => {
-      if (data.hits.length === 0) {
+      if (data.totalHits === 0) {
         hideLoader();
+        showGallery();
 
         iziToast.show({
           message:
@@ -54,6 +64,7 @@ searchForm.addEventListener('submit', event => {
     })
     .catch(() => {
       hideLoader();
+      showGallery();
 
       iziToast.show({
         message: 'Failed to load image. Please, try again!',
@@ -67,4 +78,35 @@ searchForm.addEventListener('submit', event => {
     .finally(() => {
       searchForm.reset();
     });
+});
+
+loadMoreButton.addEventListener('click', () => {
+  page += 1;
+
+  showLoader();
+  hideLoadMoreButton();
+
+  getImagesByQuery(userSearchText, page).then(data => {
+    const totalPages = data.totalHits / itemsPerPage;
+
+    if (page > totalPages) {
+      iziToast.error({
+        message: `We're sorry, but you've reached the end of search results.`,
+        messageColor: '#fff',
+        backgroundColor: '#09f',
+        position: 'topRight',
+        icon: 'bi bi-bell',
+        iconColor: '#fff',
+      });
+
+      hideLoadMoreButton();
+      hideLoader();
+      showGallery();
+      return;
+    }
+
+    createGallery(data.hits);
+    lightbox.refresh();
+    return imagePromisesLoading(data.totalHits);
+  });
 });

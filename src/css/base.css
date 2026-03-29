@@ -53,3 +53,7 @@ main:has(.back-link) {
     padding: 0 156px;
   }
 }
+
+.is-hidden {
+  display: none;
+}

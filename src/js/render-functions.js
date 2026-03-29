@@ -29,7 +29,7 @@ export const createGallery = images => {
         views,
         comments,
         downloads,
-      }) => `<li class='gallery-item'>
+      }) => `<li class='gallery-item is-loading'>
         <a class='gallery-link' href='${largeImageURL}'>
           <img class='gallery-image' src='${webformatURL}' alt='${tags}'>
         </a>
@@ -43,7 +43,7 @@ export const createGallery = images => {
     )
     .join('');
 
-  galleryList.insertAdjacentHTML('afterbegin', markup);
+  galleryList.insertAdjacentHTML('beforeend', markup);
 };
 
 export let lightbox = new SimpleLightbox('.gallery-link', {
@@ -59,20 +59,34 @@ export const clearGallery = () => {
 const loader = document.querySelector('.loader');
 
 export const showLoader = () => {
-  galleryList.style.display = 'none';
   loader.classList.remove('is-hidden');
 };
 
 export const hideLoader = () => {
   loader.classList.add('is-hidden');
+};
+
+export const showGallery = () => {
   galleryList.style.display = 'flex';
 };
 
-export const imagePromisesLoading = () => {
-  const allImages = document.querySelectorAll('.gallery-image');
+export const hideGallery = () => {
+  galleryList.style.display = 'none';
+};
 
-  const allPromises = Array.from(allImages).map(img => {
+export const imagePromisesLoading = async numberOfNewImages => {
+  const allListItems = document.querySelectorAll('.gallery-item');
+  const newItems = Array.from(allListItems).slice(-numberOfNewImages);
+
+  const newImages = newItems.map(item => item.querySelector('.gallery-image'));
+
+  const allPromises = newImages.map(img => {
     return new Promise((resolve, reject) => {
+      if (img.complete && img.naturalHeight !== 0) {
+        resolve();
+        return;
+      }
+
       img.addEventListener('load', () => {
         resolve(img);
       });
@@ -83,7 +97,21 @@ export const imagePromisesLoading = () => {
     });
   });
 
-  Promise.allSettled(allPromises).then(() => {
+  await Promise.allSettled(allPromises).then(() => {
+    newItems.forEach(item => item.classList.remove('is-loading'));
+
     hideLoader();
+    showGallery();
+    showLoadMoreButton();
   });
+};
+
+const loadBtn = document.querySelector('.load-more-btn');
+
+export const showLoadMoreButton = () => {
+  loadBtn.classList.remove('is-hidden-btn');
+};
+
+export const hideLoadMoreButton = () => {
+  loadBtn.classList.add('is-hidden-btn');
 };

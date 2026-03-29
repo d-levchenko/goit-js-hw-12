@@ -62,6 +62,10 @@
   flex-direction: column;
   position: relative;
 
+  &.is-loading {
+    display: none;
+  }
+
   & .image-description-wrapper {
     background-color: #fff;
     position: absolute;
