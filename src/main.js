@@ -8,8 +8,8 @@ import {
   showLoader,
   hideLoader,
   imagePromisesLoading,
-  lightbox,
   hideLoadMoreButton,
+  showLoadMoreButton,
   hideGallery,
   showGallery,
 } from './js/render-functions';
@@ -46,6 +46,7 @@ searchForm.addEventListener('submit', async event => {
 
   try {
     const data = await getImagesByQuery(userSearchText, page);
+    const totalPages = Math.ceil(data.totalHits / itemsPerPage);
 
     if (data.totalHits === 0) {
       hideLoader();
@@ -65,11 +66,20 @@ searchForm.addEventListener('submit', async event => {
     }
 
     createGallery(data.hits);
-    // lightbox.refresh();
     await imagePromisesLoading(data.hits.length);
+
+    hideLoader();
+    showGallery();
+
+    if (page < totalPages) {
+      showLoadMoreButton();
+    } else {
+      hideLoadMoreButton();
+    }
   } catch (error) {
     hideLoader();
     showGallery();
+    hideLoadMoreButton();
 
     iziToast.show({
       message: 'Failed to load image. Please, try again!',
@@ -111,9 +121,25 @@ loadMoreButton.addEventListener('click', async () => {
     }
 
     createGallery(data.hits);
-    // lightbox.refresh();
-    // hideLoader();
     const newItems = await imagePromisesLoading(data.hits.length);
+    hideLoader();
+    showGallery();
+
+    if (page < totalPages) {
+      showLoadMoreButton();
+    } else {
+      hideLoadMoreButton();
+
+      iziToast.error({
+        message: `We're sorry, but you've reached the end of search results.`,
+        messageColor: '#fff',
+        backgroundColor: '#09f',
+        position: 'topRight',
+        icon: 'bi bi-bell',
+        iconColor: '#fff',
+      });
+    }
+
     const firstItem = newItems[0];
     const scroll = firstItem.getBoundingClientRect();
 
@@ -123,6 +149,8 @@ loadMoreButton.addEventListener('click', async () => {
     });
   } catch (error) {
     hideLoader();
+    showGallery();
+    hideLoadMoreButton();
 
     iziToast.error({
       message: 'Failed to load new images!',

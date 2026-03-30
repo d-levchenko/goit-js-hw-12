@@ -102,9 +102,9 @@ export const imagePromisesLoading = async numberOfNewImages => {
 
   newItems.forEach(item => item.classList.remove('is-loading'));
 
-  hideLoader();
-  showGallery();
-  showLoadMoreButton();
+  // hideLoader();
+  // showGallery();
+  // showLoadMoreButton();
 
   return newItems;
 };
