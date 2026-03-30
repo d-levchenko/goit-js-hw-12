@@ -21,7 +21,7 @@ let userSearchText = '';
 let page = 1;
 const itemsPerPage = 15;
 
-searchForm.addEventListener('submit', event => {
+searchForm.addEventListener('submit', async event => {
   event.preventDefault();
   userSearchText = searchForm.elements['search-text'].value.trim();
 
@@ -42,53 +42,57 @@ searchForm.addEventListener('submit', event => {
   hideGallery();
   hideLoadMoreButton();
 
-  getImagesByQuery(userSearchText, page)
-    .then(data => {
-      if (data.totalHits === 0) {
-        hideLoader();
-        showGallery();
+  page = 1;
 
-        iziToast.show({
-          message:
-            'Sorry, there are no images matching your search query. Please try again!',
-          messageColor: '#fff',
-          backgroundColor: '#ef4040',
-          position: 'topRight',
-          icon: 'bi bi-x-octagon',
-          iconColor: '#fff',
-        });
-      } else {
-        createGallery(data.hits);
-        lightbox.refresh();
-        imagePromisesLoading(data.totalHits, false);
-      }
-    })
-    .catch(() => {
+  try {
+    const data = await getImagesByQuery(userSearchText, page);
+
+    if (data.totalHits === 0) {
       hideLoader();
       showGallery();
 
       iziToast.show({
-        message: 'Failed to load image. Please, try again!',
+        message:
+          'Sorry, there are no images matching your search query. Please try again!',
         messageColor: '#fff',
         backgroundColor: '#ef4040',
         position: 'topRight',
         icon: 'bi bi-x-octagon',
         iconColor: '#fff',
       });
-    })
-    .finally(() => {
-      searchForm.reset();
+
+      return;
+    }
+
+    createGallery(data.hits);
+    // lightbox.refresh();
+    await imagePromisesLoading(data.hits.length);
+  } catch (error) {
+    hideLoader();
+    showGallery();
+
+    iziToast.show({
+      message: 'Failed to load image. Please, try again!',
+      messageColor: '#fff',
+      backgroundColor: '#ef4040',
+      position: 'topRight',
+      icon: 'bi bi-x-octagon',
+      iconColor: '#fff',
     });
+  } finally {
+    searchForm.reset();
+  }
 });
 
-loadMoreButton.addEventListener('click', () => {
+loadMoreButton.addEventListener('click', async () => {
   page += 1;
 
   showLoader();
   hideLoadMoreButton();
 
-  getImagesByQuery(userSearchText, page).then(data => {
-    const totalPages = data.totalHits / itemsPerPage;
+  try {
+    const data = await getImagesByQuery(userSearchText, page);
+    const totalPages = Math.ceil(data.totalHits / itemsPerPage);
 
     if (page > totalPages) {
       iziToast.error({
@@ -107,7 +111,26 @@ loadMoreButton.addEventListener('click', () => {
     }
 
     createGallery(data.hits);
-    lightbox.refresh();
-    return imagePromisesLoading(data.totalHits, true);
-  });
+    // lightbox.refresh();
+    // hideLoader();
+    const newItems = await imagePromisesLoading(data.hits.length);
+    const firstItem = newItems[0];
+    const scroll = firstItem.getBoundingClientRect();
+
+    window.scrollBy({
+      top: scroll.height * 2,
+      behavior: 'smooth',
+    });
+  } catch (error) {
+    hideLoader();
+
+    iziToast.error({
+      message: 'Failed to load new images!',
+      messageColor: '#fff',
+      backgroundColor: '#ef4040',
+      position: 'topRight',
+      icon: 'bi bi-x-octagon',
+      iconColor: '#fff',
+    });
+  }
 });

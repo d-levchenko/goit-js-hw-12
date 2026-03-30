@@ -44,6 +44,7 @@ export const createGallery = images => {
     .join('');
 
   galleryList.insertAdjacentHTML('beforeend', markup);
+  lightbox.refresh();
 };
 
 export let lightbox = new SimpleLightbox('.gallery-link', {
@@ -74,10 +75,7 @@ export const hideGallery = () => {
   galleryList.style.display = 'none';
 };
 
-export const imagePromisesLoading = async (
-  numberOfNewImages,
-  shouldScroll = false,
-) => {
+export const imagePromisesLoading = async numberOfNewImages => {
   const allListItems = document.querySelectorAll('.gallery-item');
   const newItems = Array.from(allListItems).slice(-numberOfNewImages);
 
@@ -100,23 +98,15 @@ export const imagePromisesLoading = async (
     });
   });
 
-  await Promise.allSettled(allPromises).then(() => {
-    newItems.forEach(item => item.classList.remove('is-loading'));
+  await Promise.allSettled(allPromises);
 
-    hideLoader();
-    showGallery();
-    showLoadMoreButton();
+  newItems.forEach(item => item.classList.remove('is-loading'));
 
-    if (shouldScroll) {
-      const firstNewItem = newItems[0];
-      const scroll = firstNewItem.getBoundingClientRect();
+  hideLoader();
+  showGallery();
+  showLoadMoreButton();
 
-      window.scrollBy({
-        top: scroll.height * 2,
-        behavior: 'smooth',
-      });
-    }
-  });
+  return newItems;
 };
 
 const loadBtn = document.querySelector('.load-more-btn');
