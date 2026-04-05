@@ -2,7 +2,7 @@ import axios from 'axios';
 import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
 
-const myAPI_Key = '55171799-755350edf6c0ed064d9a514af';
+const myAPI_Key = import.meta.env.VITE_API_KEY;
 const defaultURL = (axios.defaults.baseURL = 'https://pixabay.com/api/');
 
 export const getImagesByQuery = async (query, page) => {
